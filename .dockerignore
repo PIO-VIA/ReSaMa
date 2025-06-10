@@ -1,0 +1,22 @@
+# Ignorer les fichiers et dossiers inutiles pour Docker
+target/
+.mvn/wrapper/maven-wrapper.jar
+.git/
+.gitignore
+README.md
+.env
+*.log
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules si présents
+node_modules/
