@@ -13,8 +13,7 @@ COPY mvnw.cmd .
 # Copier le code source
 COPY src ./src
 
-# Construire l'application (sans les tests pour accélérer le build)
-RUN mvn clean package -DskipTests
+
 
 # Phase de production avec une image plus légère
 FROM eclipse-temurin:17-jre-jammy
