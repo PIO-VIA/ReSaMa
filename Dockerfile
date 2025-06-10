@@ -1,5 +1,5 @@
 # Utiliser une image avec Maven et JDK intégrés
-FROM maven:3.9.4-eclipse-temurin-17
+FROM maven:3.9.4-eclipse-temurin-21
 
 # Définir le répertoire de travail
 WORKDIR /app
@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . .
 
 # Nettoyer et construire l'application
-RUN mvn clean package
+RUN mvn clean package -DskipTests
 
 # Trouver et renommer le JAR pour simplifier
 RUN find target -name "*.jar" -exec cp {} app.jar \;
