@@ -23,7 +23,7 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("API Système de Gestion d'École Primaire")
+                        .title("API Système de Reservation de salles et de ")
                         .description("""
                     Cette API permet de gérer les  planning des salles et materiels d'une  application:
                    
