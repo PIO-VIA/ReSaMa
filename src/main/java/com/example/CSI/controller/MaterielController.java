@@ -1,6 +1,8 @@
 package com.example.CSI.controller;
 
-
+import com.example.CSI.dto.MaterielDTO;
+import com.example.CSI.dto.MaterielSimpleDTO;
+import com.example.CSI.mapper.DTOMapper;
 import com.example.CSI.model.*;
 import com.example.CSI.service.MaterielService;
 import jakarta.validation.Valid;
@@ -23,15 +25,17 @@ import java.util.List;
 public class MaterielController {
 
     private final MaterielService materielService;
+    private final DTOMapper dtoMapper;
 
     // Créer un nouveau matériel
     @PostMapping
-    public ResponseEntity<Materiel> creerMateriel(@Valid @RequestBody Materiel materiel) {
+    public ResponseEntity<MaterielSimpleDTO> creerMateriel(@Valid @RequestBody Materiel materiel) {
         log.info("Demande de création de matériel: {}", materiel.getCodeMateriel());
 
         try {
             Materiel nouveauMateriel = materielService.creerMateriel(materiel);
-            return ResponseEntity.status(HttpStatus.CREATED).body(nouveauMateriel);
+            MaterielSimpleDTO dto = dtoMapper.toMaterielSimpleDTO(nouveauMateriel);
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (IllegalArgumentException e) {
             log.error("Erreur lors de la création du matériel: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
@@ -40,12 +44,13 @@ public class MaterielController {
 
     // Créer un nouvel ordinateur
     @PostMapping("/ordinateurs")
-    public ResponseEntity<Materiel> creerOrdinateur(@Valid @RequestBody Ordinateur ordinateur) {
+    public ResponseEntity<MaterielSimpleDTO> creerOrdinateur(@Valid @RequestBody Ordinateur ordinateur) {
         log.info("Demande de création d'ordinateur: {}", ordinateur.getCodeMateriel());
 
         try {
             Materiel nouvelOrdinateur = materielService.creerMateriel(ordinateur);
-            return ResponseEntity.status(HttpStatus.CREATED).body(nouvelOrdinateur);
+            MaterielSimpleDTO dto = dtoMapper.toMaterielSimpleDTO(nouvelOrdinateur);
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (IllegalArgumentException e) {
             log.error("Erreur lors de la création de l'ordinateur: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
@@ -54,12 +59,13 @@ public class MaterielController {
 
     // Créer un nouveau vidéoprojecteur
     @PostMapping("/videoprojecteurs")
-    public ResponseEntity<Materiel> creerVideoProjecteur(@Valid @RequestBody VideoProjecteur videoProjecteur) {
+    public ResponseEntity<MaterielSimpleDTO> creerVideoProjecteur(@Valid @RequestBody VideoProjecteur videoProjecteur) {
         log.info("Demande de création de vidéoprojecteur: {}", videoProjecteur.getCodeMateriel());
 
         try {
             Materiel nouveauVideoProjecteur = materielService.creerMateriel(videoProjecteur);
-            return ResponseEntity.status(HttpStatus.CREATED).body(nouveauVideoProjecteur);
+            MaterielSimpleDTO dto = dtoMapper.toMaterielSimpleDTO(nouveauVideoProjecteur);
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (IllegalArgumentException e) {
             log.error("Erreur lors de la création du vidéoprojecteur: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
@@ -68,90 +74,102 @@ public class MaterielController {
 
     // Récupérer tous les matériels
     @GetMapping
-    public ResponseEntity<List<Materiel>> obtenirTousLesMateriels() {
+    public ResponseEntity<List<MaterielSimpleDTO>> obtenirTousLesMateriels() {
         log.info("Demande de récupération de tous les matériels");
         List<Materiel> materiels = materielService.obtenirTousLesMateriels();
-        return ResponseEntity.ok(materiels);
+        List<MaterielSimpleDTO> dtos = dtoMapper.toMaterielSimpleDTOList(materiels);
+        return ResponseEntity.ok(dtos);
     }
 
-    // Récupérer un matériel par code
+    // Récupérer un matériel par code (avec détails et réservations)
     @GetMapping("/{codeMateriel}")
-    public ResponseEntity<Materiel> obtenirMaterielParCode(@PathVariable String codeMateriel) {
+    public ResponseEntity<MaterielDTO> obtenirMaterielParCode(@PathVariable String codeMateriel) {
         log.info("Demande de récupération du matériel avec le code: {}", codeMateriel);
 
         return materielService.obtenirMaterielParCode(codeMateriel)
-                .map(materiel -> ResponseEntity.ok(materiel))
+                .map(materiel -> {
+                    MaterielDTO dto = dtoMapper.toMaterielDTO(materiel);
+                    return ResponseEntity.ok(dto);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 
     // Récupérer les matériels disponibles
     @GetMapping("/disponibles")
-    public ResponseEntity<List<Materiel>> obtenirMaterielsDisponibles() {
+    public ResponseEntity<List<MaterielSimpleDTO>> obtenirMaterielsDisponibles() {
         log.info("Demande de récupération des matériels disponibles");
         List<Materiel> materiels = materielService.obtenirMaterielsDisponibles();
-        return ResponseEntity.ok(materiels);
+        List<MaterielSimpleDTO> dtos = dtoMapper.toMaterielSimpleDTOList(materiels);
+        return ResponseEntity.ok(dtos);
     }
 
     // Récupérer les ordinateurs uniquement
     @GetMapping("/ordinateurs")
-    public ResponseEntity<List<Materiel>> obtenirOrdinateurs() {
+    public ResponseEntity<List<MaterielSimpleDTO>> obtenirOrdinateurs() {
         log.info("Demande de récupération des ordinateurs");
         List<Materiel> ordinateurs = materielService.obtenirOrdinateurs();
-        return ResponseEntity.ok(ordinateurs);
+        List<MaterielSimpleDTO> dtos = dtoMapper.toMaterielSimpleDTOList(ordinateurs);
+        return ResponseEntity.ok(dtos);
     }
 
     // Récupérer les vidéoprojecteurs uniquement
     @GetMapping("/videoprojecteurs")
-    public ResponseEntity<List<Materiel>> obtenirVideoProjecteurs() {
+    public ResponseEntity<List<MaterielSimpleDTO>> obtenirVideoProjecteurs() {
         log.info("Demande de récupération des vidéoprojecteurs");
         List<Materiel> videoProjecteurs = materielService.obtenirVideoProjecteurs();
-        return ResponseEntity.ok(videoProjecteurs);
+        List<MaterielSimpleDTO> dtos = dtoMapper.toMaterielSimpleDTOList(videoProjecteurs);
+        return ResponseEntity.ok(dtos);
     }
 
     // Récupérer les matériels par marque
     @GetMapping("/marque/{marque}")
-    public ResponseEntity<List<Materiel>> obtenirMaterielsParMarque(@PathVariable String marque) {
+    public ResponseEntity<List<MaterielSimpleDTO>> obtenirMaterielsParMarque(@PathVariable String marque) {
         log.info("Demande de récupération des matériels par marque: {}", marque);
         List<Materiel> materiels = materielService.obtenirMaterielsParMarque(marque);
-        return ResponseEntity.ok(materiels);
+        List<MaterielSimpleDTO> dtos = dtoMapper.toMaterielSimpleDTOList(materiels);
+        return ResponseEntity.ok(dtos);
     }
 
     // Récupérer les matériels par état
     @GetMapping("/etat/{etat}")
-    public ResponseEntity<List<Materiel>> obtenirMaterielsParEtat(@PathVariable String etat) {
+    public ResponseEntity<List<MaterielSimpleDTO>> obtenirMaterielsParEtat(@PathVariable String etat) {
         log.info("Demande de récupération des matériels par état: {}", etat);
         List<Materiel> materiels = materielService.obtenirMaterielsParEtat(etat);
-        return ResponseEntity.ok(materiels);
+        List<MaterielSimpleDTO> dtos = dtoMapper.toMaterielSimpleDTOList(materiels);
+        return ResponseEntity.ok(dtos);
     }
 
     // Récupérer les matériels par localisation
     @GetMapping("/localisation/{localisation}")
-    public ResponseEntity<List<Materiel>> obtenirMaterielsParLocalisation(@PathVariable String localisation) {
+    public ResponseEntity<List<MaterielSimpleDTO>> obtenirMaterielsParLocalisation(@PathVariable String localisation) {
         log.info("Demande de récupération des matériels par localisation: {}", localisation);
         List<Materiel> materiels = materielService.obtenirMaterielsParLocalisation(localisation);
-        return ResponseEntity.ok(materiels);
+        List<MaterielSimpleDTO> dtos = dtoMapper.toMaterielSimpleDTOList(materiels);
+        return ResponseEntity.ok(dtos);
     }
 
     // Récupérer les matériels disponibles pour une période
     @GetMapping("/disponibles/periode")
-    public ResponseEntity<List<Materiel>> obtenirMaterielsDisponiblesPourPeriode(
+    public ResponseEntity<List<MaterielSimpleDTO>> obtenirMaterielsDisponiblesPourPeriode(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate jour,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime heureDebut,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime heureFin) {
         log.info("Demande de récupération des matériels disponibles le {} de {} à {}", jour, heureDebut, heureFin);
         List<Materiel> materiels = materielService.obtenirMaterielsDisponiblesPourPeriode(jour, heureDebut, heureFin);
-        return ResponseEntity.ok(materiels);
+        List<MaterielSimpleDTO> dtos = dtoMapper.toMaterielSimpleDTOList(materiels);
+        return ResponseEntity.ok(dtos);
     }
 
     // Mettre à jour un matériel
     @PutMapping("/{codeMateriel}")
-    public ResponseEntity<Materiel> mettreAJourMateriel(@PathVariable String codeMateriel,
-                                                        @Valid @RequestBody Materiel materiel) {
+    public ResponseEntity<MaterielSimpleDTO> mettreAJourMateriel(@PathVariable String codeMateriel,
+                                                                 @Valid @RequestBody Materiel materiel) {
         log.info("Demande de mise à jour du matériel avec le code: {}", codeMateriel);
 
         try {
             Materiel materielMisAJour = materielService.mettreAJourMateriel(codeMateriel, materiel);
-            return ResponseEntity.ok(materielMisAJour);
+            MaterielSimpleDTO dto = dtoMapper.toMaterielSimpleDTO(materielMisAJour);
+            return ResponseEntity.ok(dto);
         } catch (IllegalArgumentException e) {
             log.error("Erreur lors de la mise à jour du matériel: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
@@ -160,13 +178,14 @@ public class MaterielController {
 
     // Modifier la disponibilité d'un matériel
     @PatchMapping("/{codeMateriel}/disponibilite")
-    public ResponseEntity<Materiel> modifierDisponibiliteMateriel(@PathVariable String codeMateriel,
-                                                                  @RequestParam Boolean disponibilite) {
+    public ResponseEntity<MaterielSimpleDTO> modifierDisponibiliteMateriel(@PathVariable String codeMateriel,
+                                                                           @RequestParam Boolean disponibilite) {
         log.info("Demande de modification de la disponibilité du matériel {} à {}", codeMateriel, disponibilite);
 
         try {
             Materiel materielModifie = materielService.modifierDisponibiliteMateriel(codeMateriel, disponibilite);
-            return ResponseEntity.ok(materielModifie);
+            MaterielSimpleDTO dto = dtoMapper.toMaterielSimpleDTO(materielModifie);
+            return ResponseEntity.ok(dto);
         } catch (IllegalArgumentException e) {
             log.error("Erreur lors de la modification de la disponibilité: {}", e.getMessage());
             return ResponseEntity.notFound().build();
@@ -175,13 +194,14 @@ public class MaterielController {
 
     // Modifier l'état d'un matériel
     @PatchMapping("/{codeMateriel}/etat")
-    public ResponseEntity<Materiel> modifierEtatMateriel(@PathVariable String codeMateriel,
-                                                         @RequestParam String etat) {
+    public ResponseEntity<MaterielSimpleDTO> modifierEtatMateriel(@PathVariable String codeMateriel,
+                                                                  @RequestParam String etat) {
         log.info("Demande de modification de l'état du matériel {} à {}", codeMateriel, etat);
 
         try {
             Materiel materielModifie = materielService.modifierEtatMateriel(codeMateriel, etat);
-            return ResponseEntity.ok(materielModifie);
+            MaterielSimpleDTO dto = dtoMapper.toMaterielSimpleDTO(materielModifie);
+            return ResponseEntity.ok(dto);
         } catch (IllegalArgumentException e) {
             log.error("Erreur lors de la modification de l'état: {}", e.getMessage());
             return ResponseEntity.notFound().build();
@@ -190,13 +210,14 @@ public class MaterielController {
 
     // Déplacer un matériel
     @PatchMapping("/{codeMateriel}/localisation")
-    public ResponseEntity<Materiel> deplacerMateriel(@PathVariable String codeMateriel,
-                                                     @RequestParam String localisation) {
+    public ResponseEntity<MaterielSimpleDTO> deplacerMateriel(@PathVariable String codeMateriel,
+                                                              @RequestParam String localisation) {
         log.info("Demande de déplacement du matériel {} vers {}", codeMateriel, localisation);
 
         try {
             Materiel materielDeplace = materielService.deplacerMateriel(codeMateriel, localisation);
-            return ResponseEntity.ok(materielDeplace);
+            MaterielSimpleDTO dto = dtoMapper.toMaterielSimpleDTO(materielDeplace);
+            return ResponseEntity.ok(dto);
         } catch (IllegalArgumentException e) {
             log.error("Erreur lors du déplacement du matériel: {}", e.getMessage());
             return ResponseEntity.notFound().build();

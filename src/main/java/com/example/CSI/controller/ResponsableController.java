@@ -4,6 +4,8 @@ package com.example.CSI.controller;
 import com.example.CSI.model.Enseignant;
 import com.example.CSI.model.Formation;
 import com.example.CSI.service.ResponsableService;
+import com.example.CSI.dto.*;
+import com.example.CSI.mapper.DTOMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,7 @@ import java.util.List;
 public class ResponsableController {
 
     private final ResponsableService responsableService;
+    private final DTOMapper dtoMapper;
 
     // Vérifier si un enseignant est responsable
     @GetMapping("/{idEnseignant}/est-responsable")
@@ -32,22 +35,26 @@ public class ResponsableController {
 
     // Récupérer les informations du responsable
     @GetMapping("/{idResponsable}/profil")
-    public ResponseEntity<Enseignant> obtenirProfilResponsable(@PathVariable Long idResponsable) {
+    public ResponseEntity<EnseignantSimpleDTO> obtenirProfilResponsable(@PathVariable Long idResponsable) {
         log.info("Récupération du profil du responsable: {}", idResponsable);
 
         return responsableService.obtenirInformationsResponsable(idResponsable)
-                .map(ResponseEntity::ok)
+                .map(enseignant -> {
+                    EnseignantSimpleDTO dto = dtoMapper.toEnseignantSimpleDTO(enseignant);
+                    return ResponseEntity.ok(dto);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 
     // Récupérer les formations dont l'enseignant est responsable
     @GetMapping("/{idResponsable}/formations")
-    public ResponseEntity<List<Formation>> obtenirFormationsResponsables(@PathVariable Long idResponsable) {
+    public ResponseEntity<List<FormationSimpleDTO>> obtenirFormationsResponsables(@PathVariable Long idResponsable) {
         log.info("Récupération des formations pour le responsable: {}", idResponsable);
 
         try {
             List<Formation> formations = responsableService.obtenirFormationsResponsables(idResponsable);
-            return ResponseEntity.ok(formations);
+            List<FormationSimpleDTO> dtos = dtoMapper.toFormationSimpleDTOList(formations);
+            return ResponseEntity.ok(dtos);
         } catch (IllegalArgumentException e) {
             log.error("Erreur: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
@@ -58,14 +65,15 @@ public class ResponsableController {
 
     // Créer un nouvel enseignant (réservé aux responsables)
     @PostMapping("/{idResponsable}/enseignants")
-    public ResponseEntity<Enseignant> creerEnseignant(@PathVariable Long idResponsable,
-                                                      @Valid @RequestBody Enseignant enseignant) {
+    public ResponseEntity<EnseignantSimpleDTO> creerEnseignant(@PathVariable Long idResponsable,
+                                                               @Valid @RequestBody Enseignant enseignant) {
         log.info("Création d'enseignant par le responsable {}: {} {}",
                 idResponsable, enseignant.getNomEnseignant(), enseignant.getPrenomEnseignant());
 
         try {
             Enseignant nouvelEnseignant = responsableService.creerEnseignantParResponsable(idResponsable, enseignant);
-            return ResponseEntity.status(HttpStatus.CREATED).body(nouvelEnseignant);
+            EnseignantSimpleDTO dto = dtoMapper.toEnseignantSimpleDTO(nouvelEnseignant);
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (IllegalArgumentException e) {
             log.error("Erreur lors de la création de l'enseignant: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
@@ -74,12 +82,13 @@ public class ResponsableController {
 
     // Récupérer tous les enseignants (pour gestion par responsable)
     @GetMapping("/{idResponsable}/enseignants")
-    public ResponseEntity<List<Enseignant>> obtenirTousLesEnseignants(@PathVariable Long idResponsable) {
+    public ResponseEntity<List<EnseignantSimpleDTO>> obtenirTousLesEnseignants(@PathVariable Long idResponsable) {
         log.info("Récupération de tous les enseignants par le responsable: {}", idResponsable);
 
         try {
             List<Enseignant> enseignants = responsableService.obtenirTousLesEnseignantsParResponsable(idResponsable);
-            return ResponseEntity.ok(enseignants);
+            List<EnseignantSimpleDTO> dtos = dtoMapper.toEnseignantSimpleDTOList(enseignants);
+            return ResponseEntity.ok(dtos);
         } catch (IllegalArgumentException e) {
             log.error("Accès refusé: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -88,12 +97,13 @@ public class ResponsableController {
 
     // Récupérer les enseignants non-responsables
     @GetMapping("/{idResponsable}/enseignants/non-responsables")
-    public ResponseEntity<List<Enseignant>> obtenirEnseignantsNonResponsables(@PathVariable Long idResponsable) {
+    public ResponseEntity<List<EnseignantSimpleDTO>> obtenirEnseignantsNonResponsables(@PathVariable Long idResponsable) {
         log.info("Récupération des enseignants non-responsables par: {}", idResponsable);
 
         try {
             List<Enseignant> enseignants = responsableService.obtenirEnseignantsNonResponsables(idResponsable);
-            return ResponseEntity.ok(enseignants);
+            List<EnseignantSimpleDTO> dtos = dtoMapper.toEnseignantSimpleDTOList(enseignants);
+            return ResponseEntity.ok(dtos);
         } catch (IllegalArgumentException e) {
             log.error("Accès refusé: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -102,15 +112,16 @@ public class ResponsableController {
 
     // Mettre à jour un enseignant (réservé aux responsables)
     @PutMapping("/{idResponsable}/enseignants/{idEnseignant}")
-    public ResponseEntity<Enseignant> mettreAJourEnseignant(@PathVariable Long idResponsable,
-                                                            @PathVariable Long idEnseignant,
-                                                            @Valid @RequestBody Enseignant enseignant) {
+    public ResponseEntity<EnseignantSimpleDTO> mettreAJourEnseignant(@PathVariable Long idResponsable,
+                                                                     @PathVariable Long idEnseignant,
+                                                                     @Valid @RequestBody Enseignant enseignant) {
         log.info("Mise à jour de l'enseignant {} par le responsable {}", idEnseignant, idResponsable);
 
         try {
             Enseignant enseignantMisAJour = responsableService.mettreAJourEnseignantParResponsable(
                     idResponsable, idEnseignant, enseignant);
-            return ResponseEntity.ok(enseignantMisAJour);
+            EnseignantSimpleDTO dto = dtoMapper.toEnseignantSimpleDTO(enseignantMisAJour);
+            return ResponseEntity.ok(dto);
         } catch (IllegalArgumentException e) {
             log.error("Erreur lors de la mise à jour: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
@@ -153,7 +164,7 @@ public class ResponsableController {
 
     // Obtenir des statistiques pour le tableau de bord du responsable
     @GetMapping("/{idResponsable}/tableau-bord")
-    public ResponseEntity<TableauBordResponsable> obtenirTableauBord(@PathVariable Long idResponsable) {
+    public ResponseEntity<TableauBordResponsableDTO> obtenirTableauBord(@PathVariable Long idResponsable) {
         log.info("Récupération du tableau de bord pour le responsable: {}", idResponsable);
 
         try {
@@ -161,12 +172,12 @@ public class ResponsableController {
             List<Enseignant> enseignants = responsableService.obtenirTousLesEnseignantsParResponsable(idResponsable);
             List<Enseignant> nonResponsables = responsableService.obtenirEnseignantsNonResponsables(idResponsable);
 
-            TableauBordResponsable tableauBord = new TableauBordResponsable(
+            TableauBordResponsableDTO tableauBord = new TableauBordResponsableDTO(
                     formations.size(),
                     enseignants.size(),
                     nonResponsables.size(),
-                    formations,
-                    enseignants
+                    dtoMapper.toFormationSimpleDTOList(formations),
+                    dtoMapper.toEnseignantSimpleDTOList(enseignants)
             );
 
             return ResponseEntity.ok(tableauBord);
@@ -176,29 +187,6 @@ public class ResponsableController {
         }
     }
 
-    // Classe pour le tableau de bord
-    public static class TableauBordResponsable {
-        private int nombreFormations;
-        private int nombreEnseignantsTotal;
-        private int nombreEnseignantsNonResponsables;
-        private List<Formation> formations;
-        private List<Enseignant> enseignants;
 
-        public TableauBordResponsable(int nombreFormations, int nombreEnseignantsTotal,
-                                      int nombreEnseignantsNonResponsables, List<Formation> formations,
-                                      List<Enseignant> enseignants) {
-            this.nombreFormations = nombreFormations;
-            this.nombreEnseignantsTotal = nombreEnseignantsTotal;
-            this.nombreEnseignantsNonResponsables = nombreEnseignantsNonResponsables;
-            this.formations = formations;
-            this.enseignants = enseignants;
-        }
 
-        // Getters
-        public int getNombreFormations() { return nombreFormations; }
-        public int getNombreEnseignantsTotal() { return nombreEnseignantsTotal; }
-        public int getNombreEnseignantsNonResponsables() { return nombreEnseignantsNonResponsables; }
-        public List<Formation> getFormations() { return formations; }
-        public List<Enseignant> getEnseignants() { return enseignants; }
-    }
 }

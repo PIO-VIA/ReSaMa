@@ -1,6 +1,8 @@
 package com.example.CSI.controller;
 
-
+import com.example.CSI.dto.FormationDTO;
+import com.example.CSI.dto.FormationSimpleDTO;
+import com.example.CSI.mapper.DTOMapper;
 import com.example.CSI.model.Formation;
 import com.example.CSI.service.FormationService;
 import jakarta.validation.Valid;
@@ -20,15 +22,17 @@ import java.util.List;
 public class FormationController {
 
     private final FormationService formationService;
+    private final DTOMapper dtoMapper;
 
     // Créer une nouvelle formation
     @PostMapping
-    public ResponseEntity<Formation> creerFormation(@Valid @RequestBody Formation formation) {
+    public ResponseEntity<FormationSimpleDTO> creerFormation(@Valid @RequestBody Formation formation) {
         log.info("Demande de création de formation: {}", formation.getCodeFormation());
 
         try {
             Formation nouvelleFormation = formationService.creerFormation(formation);
-            return ResponseEntity.status(HttpStatus.CREATED).body(nouvelleFormation);
+            FormationSimpleDTO dto = dtoMapper.toFormationSimpleDTO(nouvelleFormation);
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (IllegalArgumentException e) {
             log.error("Erreur lors de la création de la formation: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
@@ -37,81 +41,94 @@ public class FormationController {
 
     // Récupérer toutes les formations
     @GetMapping
-    public ResponseEntity<List<Formation>> obtenirToutesLesFormations() {
+    public ResponseEntity<List<FormationSimpleDTO>> obtenirToutesLesFormations() {
         log.info("Demande de récupération de toutes les formations");
         List<Formation> formations = formationService.obtenirToutesLesFormations();
-        return ResponseEntity.ok(formations);
+        List<FormationSimpleDTO> dtos = dtoMapper.toFormationSimpleDTOList(formations);
+        return ResponseEntity.ok(dtos);
     }
 
     // Récupérer une formation par ID
     @GetMapping("/{id}")
-    public ResponseEntity<Formation> obtenirFormationParId(@PathVariable Long id) {
+    public ResponseEntity<FormationDTO> obtenirFormationParId(@PathVariable Long id) {
         log.info("Demande de récupération de la formation avec l'ID: {}", id);
 
         return formationService.obtenirFormationParId(id)
-                .map(formation -> ResponseEntity.ok(formation))
+                .map(formation -> {
+                    FormationDTO dto = dtoMapper.toFormationDTO(formation);
+                    return ResponseEntity.ok(dto);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 
     // Récupérer une formation par code
     @GetMapping("/code/{codeFormation}")
-    public ResponseEntity<Formation> obtenirFormationParCode(@PathVariable String codeFormation) {
+    public ResponseEntity<FormationDTO> obtenirFormationParCode(@PathVariable String codeFormation) {
         log.info("Demande de récupération de la formation avec le code: {}", codeFormation);
 
         return formationService.obtenirFormationParCode(codeFormation)
-                .map(formation -> ResponseEntity.ok(formation))
+                .map(formation -> {
+                    FormationDTO dto = dtoMapper.toFormationDTO(formation);
+                    return ResponseEntity.ok(dto);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 
     // Rechercher des formations par nom
     @GetMapping("/recherche")
-    public ResponseEntity<List<Formation>> rechercherFormationsParNom(@RequestParam String nom) {
+    public ResponseEntity<List<FormationSimpleDTO>> rechercherFormationsParNom(@RequestParam String nom) {
         log.info("Demande de recherche de formations par nom: {}", nom);
         List<Formation> formations = formationService.rechercherFormationsParNom(nom);
-        return ResponseEntity.ok(formations);
+        List<FormationSimpleDTO> dtos = dtoMapper.toFormationSimpleDTOList(formations);
+        return ResponseEntity.ok(dtos);
     }
 
     // Récupérer les formations par niveau
     @GetMapping("/niveau/{niveau}")
-    public ResponseEntity<List<Formation>> obtenirFormationsParNiveau(@PathVariable String niveau) {
+    public ResponseEntity<List<FormationSimpleDTO>> obtenirFormationsParNiveau(@PathVariable String niveau) {
         log.info("Demande de récupération des formations par niveau: {}", niveau);
         List<Formation> formations = formationService.obtenirFormationsParNiveau(niveau);
-        return ResponseEntity.ok(formations);
+        List<FormationSimpleDTO> dtos = dtoMapper.toFormationSimpleDTOList(formations);
+        return ResponseEntity.ok(dtos);
     }
 
     // Récupérer les formations d'un responsable
     @GetMapping("/responsable/{idResponsable}")
-    public ResponseEntity<List<Formation>> obtenirFormationsParResponsable(@PathVariable Long idResponsable) {
+    public ResponseEntity<List<FormationSimpleDTO>> obtenirFormationsParResponsable(@PathVariable Long idResponsable) {
         log.info("Demande de récupération des formations pour le responsable: {}", idResponsable);
         List<Formation> formations = formationService.obtenirFormationsParResponsable(idResponsable);
-        return ResponseEntity.ok(formations);
+        List<FormationSimpleDTO> dtos = dtoMapper.toFormationSimpleDTOList(formations);
+        return ResponseEntity.ok(dtos);
     }
 
     // Récupérer les formations d'un responsable avec détails
     @GetMapping("/responsable/{idResponsable}/details")
-    public ResponseEntity<List<Formation>> obtenirFormationsParResponsableAvecDetails(@PathVariable Long idResponsable) {
+    public ResponseEntity<List<FormationDTO>> obtenirFormationsParResponsableAvecDetails(@PathVariable Long idResponsable) {
         log.info("Demande de récupération des formations avec détails pour le responsable: {}", idResponsable);
         List<Formation> formations = formationService.obtenirFormationsParResponsableAvecDetails(idResponsable);
-        return ResponseEntity.ok(formations);
+        List<FormationDTO> dtos = dtoMapper.toFormationDTOList(formations);
+        return ResponseEntity.ok(dtos);
     }
 
     // Récupérer toutes les formations avec leurs réservations
     @GetMapping("/avec-reservations")
-    public ResponseEntity<List<Formation>> obtenirFormationsAvecReservations() {
+    public ResponseEntity<List<FormationDTO>> obtenirFormationsAvecReservations() {
         log.info("Demande de récupération de toutes les formations avec leurs réservations");
         List<Formation> formations = formationService.obtenirFormationsAvecReservations();
-        return ResponseEntity.ok(formations);
+        List<FormationDTO> dtos = dtoMapper.toFormationDTOList(formations);
+        return ResponseEntity.ok(dtos);
     }
 
     // Mettre à jour une formation
     @PutMapping("/{id}")
-    public ResponseEntity<Formation> mettreAJourFormation(@PathVariable Long id,
-                                                          @Valid @RequestBody Formation formation) {
+    public ResponseEntity<FormationSimpleDTO> mettreAJourFormation(@PathVariable Long id,
+                                                                   @Valid @RequestBody Formation formation) {
         log.info("Demande de mise à jour de la formation avec l'ID: {}", id);
 
         try {
             Formation formationMiseAJour = formationService.mettreAJourFormation(id, formation);
-            return ResponseEntity.ok(formationMiseAJour);
+            FormationSimpleDTO dto = dtoMapper.toFormationSimpleDTO(formationMiseAJour);
+            return ResponseEntity.ok(dto);
         } catch (IllegalArgumentException e) {
             log.error("Erreur lors de la mise à jour de la formation: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
@@ -120,14 +137,15 @@ public class FormationController {
 
     // Changer le responsable d'une formation
     @PatchMapping("/{idFormation}/responsable/{idNouveauResponsable}")
-    public ResponseEntity<Formation> changerResponsable(@PathVariable Long idFormation,
-                                                        @PathVariable Long idNouveauResponsable) {
+    public ResponseEntity<FormationSimpleDTO> changerResponsable(@PathVariable Long idFormation,
+                                                                 @PathVariable Long idNouveauResponsable) {
         log.info("Demande de changement du responsable de la formation {} vers l'enseignant {}",
                 idFormation, idNouveauResponsable);
 
         try {
             Formation formationModifiee = formationService.changerResponsable(idFormation, idNouveauResponsable);
-            return ResponseEntity.ok(formationModifiee);
+            FormationSimpleDTO dto = dtoMapper.toFormationSimpleDTO(formationModifiee);
+            return ResponseEntity.ok(dto);
         } catch (IllegalArgumentException e) {
             log.error("Erreur lors du changement de responsable: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
