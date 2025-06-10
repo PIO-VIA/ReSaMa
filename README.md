@@ -113,8 +113,8 @@ mysql --version
 ### 1. Cloner le projet
 
 ```bash
-git clone https://github.com/votre-repo/reservation-api.git
-cd reservation-api
+git clone https://github.com/PIO-VIA/ReSaMa.git
+cd ReSaMa
 ```
 
 ### 2. Configuration de la base de données
@@ -137,9 +137,9 @@ Créer/modifier le fichier `src/main/resources/application.properties` :
 
 ```properties
 # Configuration Base de données
-spring.datasource.url=jdbc:mysql://localhost:3306/etablissement_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
-spring.datasource.username=reservation_user
-spring.datasource.password=motdepasse123
+spring.datasource.url=jdbc:mysql://localhost:3306/GestMat?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+spring.datasource.username=votre_nom
+spring.datasource.password=votre_mot_de_pass
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
 # Configuration JPA/Hibernate
