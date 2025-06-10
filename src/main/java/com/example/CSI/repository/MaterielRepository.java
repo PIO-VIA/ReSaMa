@@ -1,7 +1,7 @@
 package com.example.CSI.repository;
 
 
-import com.example.CSI.model.Materiel;
+import com.example.CSI.model.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -28,11 +28,11 @@ public interface MaterielRepository extends JpaRepository<Materiel, String> {
     List<Materiel> findByTypeMateriel(@Param("typeMateriel") Class<? extends Materiel> typeMateriel);
 
     // Recherche des ordinateurs uniquement
-    @Query("SELECT m FROM Materiel m WHERE TYPE(m) = com.etablissement.reservationapi.entity.Ordinateur")
+    @Query("SELECT m FROM Materiel m WHERE TYPE(m) = com.example.CSI.model.Ordinateur")
     List<Materiel> findOrdinateurs();
 
     // Recherche des vidéoprojecteurs uniquement
-    @Query("SELECT m FROM Materiel m WHERE TYPE(m) = com.etablissement.reservationapi.entity.VideoProjecteur")
+    @Query("SELECT m FROM Materiel m WHERE TYPE(m) = com.example.CSI.model.VideoProjecteur")
     List<Materiel> findVideoProjecteurs();
 
     // Recherche des matériels disponibles pour une période donnée
